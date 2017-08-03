@@ -13,10 +13,24 @@ class SeafStatus : public QObject
 	Q_OBJECT
 
 public:
+	enum SyncStatus {
+		None = 0,
+		Syncing,
+		Error,
+		Ignored,
+		Synced,
+		Paused,
+		Readonly,
+		Locked,
+		LockedByMe,
+		Invalid
+	};
+	Q_ENUM(SyncStatus)
+
 	explicit SeafStatus(QObject *parent = nullptr);
 	~SeafStatus();
 
-	QByteArray syncStatus(const QString &path);
+	SyncStatus syncStatus(const QString &path);
 
 private:
 	CcnetClientPool *_pool;

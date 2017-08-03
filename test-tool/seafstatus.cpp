@@ -6,6 +6,19 @@ extern "C" {
 #include <seafile/seafile.h>
 }
 
+static QHash<QByteArray, SeafStatus::SyncStatus> path_status = {
+	{"none", SeafStatus::None},
+	{"syncing", SeafStatus::Syncing},
+	{"error", SeafStatus::Error},
+	{"ignored", SeafStatus::Ignored},
+	{"synced", SeafStatus::Synced},
+	{"paused", SeafStatus::Paused},
+	{"readonly", SeafStatus::Readonly},
+	{"locked", SeafStatus::Locked},
+	{"locked_by_me", SeafStatus::LockedByMe},
+	{NULL, SeafStatus::None},
+};
+
 SeafStatus::SeafStatus(QObject *parent) :
 	QObject(parent),
 	_pool(ccnet_client_pool_new(nullptr, DEFAULT_CONFIG_DIR)),
@@ -21,7 +34,7 @@ SeafStatus::~SeafStatus()
 	free(_pool);
 }
 
-QByteArray SeafStatus::syncStatus(const QString &path)
+SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
 {
 	QFileInfo info(path);
 	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
@@ -37,15 +50,16 @@ QByteArray SeafStatus::syncStatus(const QString &path)
 												  "string", idString.constData(),
 												  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
 												  "int", info.isDir());
-			if(error)
-				return error->message;
-			else
-				return res;
+			if(error) {
+				qCritical() << error->message;
+				return SeafStatus::Invalid;
+			} else
+				return path_status[res];
 			free(res);
 		}
 	}
 
-	return "none";
+	return path_status[NULL];
 }
 
 void SeafStatus::loadRepos()
