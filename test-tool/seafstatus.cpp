@@ -8,8 +8,8 @@ extern "C" {
 
 SeafStatus::SeafStatus(QObject *parent) :
 	QObject(parent),
-	_pool(ccnet_client_pool_new("/home/sky/.ccnet/", "/home/sky/.ccnet/")),
-	_client(ccnet_create_pooled_rpc_client(_pool, "06ef2337036f2a862e847967dc4f4c1106d27d9d", "seafile-rpcserver")),
+	_pool(ccnet_client_pool_new(nullptr, DEFAULT_CONFIG_DIR)),
+	_client(ccnet_create_pooled_rpc_client(_pool, nullptr, "seafile-rpcserver")),
 	_repoIds()
 {
 	loadRepos();
