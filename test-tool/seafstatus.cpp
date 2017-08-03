@@ -38,14 +38,14 @@ QByteArray SeafStatus::syncStatus(const QString &path)
 												  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
 												  "int", info.isDir());
 			if(error)
-				qCritical() << error->message;
+				return error->message;
 			else
 				return res;
 			free(res);
 		}
 	}
 
-	return "error";
+	return "none";
 }
 
 void SeafStatus::loadRepos()
