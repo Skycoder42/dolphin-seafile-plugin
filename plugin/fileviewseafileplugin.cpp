@@ -58,9 +58,9 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 		case SeafStatus::Synced:
 			return NormalVersion;
 		case SeafStatus::Paused:
-			return MissingVersion; //TODO other ItemVersion?
+			return MissingVersion;
 		case SeafStatus::Readonly:
-			return RemovedVersion; //TODO other ItemVersion?
+			return RemovedVersion;
 		case SeafStatus::Locked:
 			return LocallyModifiedUnstagedVersion;
 		case SeafStatus::LockedByMe:
