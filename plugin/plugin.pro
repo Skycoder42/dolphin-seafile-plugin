@@ -19,13 +19,14 @@ DEFINES += QT_DEPRECATED_WARNINGS QT_ASCII_CAST_WARNINGS
 
 HEADERS += \
 		fileviewseafileplugin.h \
-    seafstatus.h
+	seafstatus.h
 
 SOURCES += \
 		fileviewseafileplugin.cpp \
-    seafstatus.cpp
+	seafstatus.cpp
 
-DISTFILES +=
+DISTFILES += \
+	fileviewseafileplugin.desktop
 
 unix {
 	target.path = $$[QT_INSTALL_PLUGINS]

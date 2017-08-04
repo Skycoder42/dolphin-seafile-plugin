@@ -1,7 +1,7 @@
 #ifndef FILEVIEWSEAFILEPLUGIN_H
 #define FILEVIEWSEAFILEPLUGIN_H
 
-#include <KVersionControlPlugin>
+#include <Dolphin/KVersionControlPlugin>
 
 #include "seafstatus.h"
 

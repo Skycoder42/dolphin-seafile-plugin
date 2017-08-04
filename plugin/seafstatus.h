@@ -48,8 +48,8 @@ public:
 	explicit SeafStatus(QObject *parent = nullptr);
 	~SeafStatus();
 
-	void connect();
-	void disconnect();
+	void connectCcnet();
+	void disconnectCcnet();
 
 	SyncStatus syncStatus(const QString &path);
 

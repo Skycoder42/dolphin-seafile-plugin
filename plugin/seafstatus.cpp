@@ -27,10 +27,10 @@ SeafStatus::SeafStatus(QObject *parent) :
 
 SeafStatus::~SeafStatus()
 {
-	disconnect();
+	disconnectCcnet();
 }
 
-void SeafStatus::connect()
+void SeafStatus::connectCcnet()
 {
 	if(!_pool)
 		_pool = ccnet_client_pool_new(nullptr, DEFAULT_CONFIG_DIR);
@@ -43,7 +43,7 @@ void SeafStatus::connect()
 	loadRepos();
 }
 
-void SeafStatus::disconnect()
+void SeafStatus::disconnectCcnet()
 {
 	_repoIds.clear();
 
@@ -60,6 +60,8 @@ void SeafStatus::disconnect()
 
 SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
 {
+	//TODO handle repository folder name
+
 	QFileInfo info(path);
 	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
 	foreach (auto repo, _repoIds.keys()) {

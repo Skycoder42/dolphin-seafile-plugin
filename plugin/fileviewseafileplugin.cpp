@@ -23,7 +23,7 @@ bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 {
 	Q_UNUSED(directory)
 	try {
-		_seaf->connect();
+		_seaf->connectCcnet();
 		return true;
 	} catch(QException &e) {
 		emit errorMessage(QString::fromUtf8(e.what()));
@@ -33,13 +33,14 @@ bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 
 void FileViewSeafilePlugin::endRetrieval()
 {
-	_seaf->disconnect();
+	_seaf->disconnectCcnet();
 }
 
 KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFileItem &item) const
 {
 	try {
-		auto status = _seaf->syncStatus(item.localPath()); //TODO relative?
+		auto status = _seaf->syncStatus(item.localPath());
+
 		switch (status) {
 		case SeafStatus::None:
 			return UnversionedVersion;
@@ -74,5 +75,9 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 QList<QAction *> FileViewSeafilePlugin::actions(const KFileItemList &items) const
 {
 	Q_UNUSED(items);
-	return {};
+	return {
+		new QAction("Test Action", (QObject*)this)
+	};
 }
+
+#include "fileviewseafileplugin.moc"
