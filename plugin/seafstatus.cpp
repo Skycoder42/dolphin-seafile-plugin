@@ -1,10 +1,29 @@
 #include "seafstatus.h"
+#include <QGlobalStatic>
 #include <QDebug>
 #include <QDir>
 extern "C" {
 #include <seafile/seafile-object.h>
 #include <seafile/seafile.h>
 }
+
+struct CCnetHelper
+{
+	inline CCnetHelper() :
+		_pool(ccnet_client_pool_new(nullptr, DEFAULT_CONFIG_DIR))
+	{}
+	inline ~CCnetHelper() {
+		free(_pool);
+	}
+
+	inline CcnetClientPool *clientPool() const {
+		return _pool;
+	}
+
+private:
+	CcnetClientPool *_pool;
+};
+Q_GLOBAL_STATIC(CCnetHelper, ccnet)
 
 static QHash<QByteArray, SeafStatus::SyncStatus> path_status = {
 	{"none", SeafStatus::None},
@@ -20,77 +39,36 @@ static QHash<QByteArray, SeafStatus::SyncStatus> path_status = {
 
 SeafStatus::SeafStatus(QObject *parent) :
 	QObject(parent),
-	_pool(nullptr),
 	_client(nullptr),
-	_repoIds()
-{}
+	_repoIds(),
+	_conTimer(new QTimer(this))
+{
+	_conTimer->setTimerType(Qt::VeryCoarseTimer);
+	_conTimer->setInterval(60 * 1000);//1 minute
+
+	connect(_conTimer, &QTimer::timeout,
+			this, &SeafStatus::freeConnection);
+}
 
 SeafStatus::~SeafStatus()
 {
-	disconnectCcnet();
+	freeConnection();
 }
 
-void SeafStatus::connectCcnet()
+void SeafStatus::engage()
 {
-	if(!_pool)
-		_pool = ccnet_client_pool_new(nullptr, DEFAULT_CONFIG_DIR);
-	if(!_client && _pool)
-		_client = ccnet_create_pooled_rpc_client(_pool, nullptr, "seafile-rpcserver");
-
-	if(!_client)
-		throw SeafException(0, "Unable to create ccnet rpc client for seafile-rpcserver");
-
-	loadRepos();
+	ensureConnected();
+	_conTimer->stop();
 }
 
-void SeafStatus::disconnectCcnet()
+void SeafStatus::disengage()
 {
-	_repoIds.clear();
-
-	if(_client){
-		ccnet_rpc_client_free(_client);
-		_client = nullptr;
-	}
-
-	if(_pool) {
-		free(_pool);
-		_pool = nullptr;
-	}
+	_conTimer->start();
 }
 
-SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
+void SeafStatus::reloadRepos()
 {
-	//TODO handle repository folder name
-
-	QFileInfo info(path);
-	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
-	foreach (auto repo, _repoIds.keys()) {
-		if(fullPath.startsWith(repo)) {
-			QDir repoDir(repo);
-			auto id = _repoIds[repo];
-			auto idString = id.toByteArray();
-			idString = idString.mid(1, idString.size() - 2);
-
-			GError *error = NULL;
-			auto res = searpc_client_call__string(_client, "seafile_get_path_sync_status", &error, 3,
-												  "string", idString.constData(),
-												  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
-												  "int", info.isDir());
-			if(error)
-				throw SeafException(error);
-			else {
-				auto status = path_status.value(res);
-				free(res);
-				return status;
-			}
-		}
-	}
-
-	return None;
-}
-
-void SeafStatus::loadRepos()
-{
+	ensureConnected();
 	_repoIds.clear();
 
 	GError *error = NULL;
@@ -100,25 +78,95 @@ void SeafStatus::loadRepos()
 	else {
 		for (auto l = res; l != NULL; l = l->next) {
 			auto repo = SEAFILE_REPO(l->data);
-			_repoIds.insert(QString::fromUtf8(repo->_worktree),
-							QUuid(repo->_id));
+			_repoIds.insert(QString::fromUtf8(seafile_repo_get_worktree(repo)),
+							QUuid(seafile_repo_get_id(repo)));
 		}
 	}
 	g_list_free(res);
 }
 
+bool SeafStatus::hasRepo(const QString &path)
+{
+	return _repoIds.contains(repoPath(path));
+}
+
+SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
+{
+	ensureConnected();
+	//TODO handle repository folder name
+
+	auto repo = repoPath(path);
+	if(!repo.isNull()) {
+		QDir repoDir(repo);
+		auto id = _repoIds[repo];
+		auto idString = id.toByteArray();
+		idString = idString.mid(1, idString.size() - 2);
+
+		GError *error = NULL;
+		auto res = searpc_client_call__string(_client, "seafile_get_path_sync_status", &error, 3,
+											  "string", idString.constData(),
+											  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
+											  "int", QFileInfo(path).isDir());
+		if(error)
+			throw SeafException(error);
+		else {
+			auto status = path_status.value(res);
+			free(res);
+			return status;
+		}
+	}
+
+	return None;
+}
+
+void SeafStatus::ensureConnected()
+{
+	if(!_client) {
+		auto pool = ccnet->clientPool();
+		if(!pool)
+			throw SeafException(tr("Ccnet pool unavailable - make shure ccnet is running"));
+
+		_client = ccnet_create_pooled_rpc_client(pool, nullptr, "seafile-rpcserver");
+		if(!_client)
+			throw SeafException(tr("Unable to create ccnet rpc client for seafile-rpcserver"));
+
+		reloadRepos();
+	}
+
+	_conTimer->start();
+}
+
+void SeafStatus::freeConnection()
+{
+	if(_client){
+		ccnet_rpc_client_free(_client);
+		_client = nullptr;
+	}
+}
+
+QString SeafStatus::repoPath(const QString &path)
+{
+	QFileInfo info(path);
+	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
+	foreach (auto repo, _repoIds.keys()) {
+		if(fullPath.startsWith(repo))
+			return repo;
+	}
+
+	return QString();
+}
+
 
 
 SeafException::SeafException(GError *error) :
-	SeafException(error->code, error->message)
+	SeafException(SeafStatus::tr("Seafile Extension: %1").arg(QString::fromUtf8(error->message)).toUtf8())
 {
 	g_free(error);
 }
 
-SeafException::SeafException(int code, QByteArray message) :
+SeafException::SeafException(QString message) :
 	QException(),
-	_code(code),
-	_message(message)
+	_message(SeafStatus::tr("Seafile Extension: %1").arg(message).toUtf8())
 {}
 
 const char *SeafException::what() const noexcept
@@ -133,5 +181,10 @@ void SeafException::raise() const
 
 QException *SeafException::clone() const
 {
-	return new SeafException(_code, _message);
+	return new SeafException(_message);
 }
+
+SeafException::SeafException(QByteArray message) :
+	QException(),
+	_message(message)
+{}

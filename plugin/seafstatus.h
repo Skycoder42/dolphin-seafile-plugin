@@ -5,6 +5,7 @@
 #include <QHash>
 #include <QUuid>
 #include <QException>
+#include <QTimer>
 extern "C" {
 #include <ccnet.h>
 }
@@ -13,7 +14,7 @@ class SeafException : public QException
 {
 public:
 	SeafException(GError *error);
-	SeafException(int code, QByteArray message);
+	SeafException(QString message);
 
 	const char *what() const noexcept override;
 
@@ -22,7 +23,8 @@ public:
 	QException *clone() const override;
 
 private:
-	int _code;
+	SeafException(QByteArray message);
+
 	QByteArray _message;
 };
 
@@ -48,18 +50,24 @@ public:
 	explicit SeafStatus(QObject *parent = nullptr);
 	~SeafStatus();
 
-	void connectCcnet();
-	void disconnectCcnet();
+	void engage();
+	void disengage();
 
+	void reloadRepos();
+
+	bool hasRepo(const QString &path);
 	SyncStatus syncStatus(const QString &path);
 
+private slots:
+	void ensureConnected();
+	void freeConnection();
+
 private:
-	CcnetClientPool *_pool;
 	SearpcClient *_client;
-
 	QHash<QString, QUuid> _repoIds;
+	QTimer *_conTimer;
 
-	void loadRepos();
+	QString repoPath(const QString &path);
 };
 
 #endif // SEAFSTATUS_H

@@ -2,6 +2,7 @@
 
 #include <KPluginFactory>
 #include <KFileItem>
+#include <QMenu>
 
 #include <QDebug>
 
@@ -23,8 +24,12 @@ bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 {
 	Q_UNUSED(directory)
 	try {
-		_seaf->connectCcnet();
-		return true;
+		_seaf->engage();
+		_seaf->reloadRepos();
+		if(_seaf->hasRepo(directory))
+			return true;
+		else
+			return false;
 	} catch(QException &e) {
 		emit errorMessage(QString::fromUtf8(e.what()));
 		return false;
@@ -33,7 +38,7 @@ bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 
 void FileViewSeafilePlugin::endRetrieval()
 {
-	_seaf->disconnectCcnet();
+	_seaf->disengage();
 }
 
 KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFileItem &item) const
@@ -74,10 +79,39 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 
 QList<QAction *> FileViewSeafilePlugin::actions(const KFileItemList &items) const
 {
-	Q_UNUSED(items);
-	return {
-		new QAction("Test Action", (QObject*)this)
-	};
+//	//test if this it's actually seafile
+//	try {
+//		_seaf->reloadRepos();
+//		auto itemValid = false;
+//		foreach(auto item, items) {
+//			if(_seaf->hasRepo(item.localPath()))
+//				itemValid = true;
+//		}
+//		if(!itemValid)
+//			return {};
+//	} catch(QException &e) {
+//		qCritical() << e.what();
+//		return {};
+//	}
+
+//	auto action = new QAction(tr("Seafile"), (QObject*)this);
+
+//	auto menu = new QMenu();
+//	action->setMenu(menu);
+//	connect(action, &QAction::destroyed,
+//			menu, &QMenu::deleteLater);
+
+//	menu->addAction(QIcon::fromTheme(QStringLiteral("filename-ignore-amarok")),
+//					tr("Ignore File(s)/Dir(s)"));
+//	menu->addSeparator();
+//	menu->addAction(QIcon::fromTheme(QStringLiteral("view-statistics")),
+//					tr("Show Quota"));
+
+//	return {
+//		action
+//	};
+	Q_UNUSED(items)
+	return {};
 }
 
 #include "fileviewseafileplugin.moc"

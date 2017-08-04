@@ -11,7 +11,7 @@ TEMPLATE = app
 
 SOURCES += \
 	main.cpp \
-    seafstatus.cpp
+	seafstatus.cpp
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
@@ -28,5 +28,5 @@ CONFIG += link_pkgconfig
 PKGCONFIG += libseafile libccnet
 
 HEADERS += \
-    ../../../../../usr/include/seafile/seafile-rpc.h \
-    seafstatus.h
+	/usr/include/seafile/seafile-rpc.h \
+	seafstatus.h
