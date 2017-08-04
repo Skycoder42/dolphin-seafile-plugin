@@ -1,6 +1,9 @@
 #include "fileviewseafileplugin.h"
+
 #include <KPluginFactory>
 #include <KFileItem>
+
+#include <QDebug>
 
 K_PLUGIN_FACTORY(FileViewSeafilePluginFactory, registerPlugin<FileViewSeafilePlugin>();)
 
@@ -43,19 +46,19 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 		case SeafStatus::Syncing:
 			return UpdateRequiredVersion;
 		case SeafStatus::Error:
-			return ConflictingVersion; //TODO
+			return ConflictingVersion;
 		case SeafStatus::Ignored:
 			return IgnoredVersion;
 		case SeafStatus::Synced:
 			return NormalVersion;
 		case SeafStatus::Paused:
-			return NormalVersion; //TODO
+			return MissingVersion; //TODO other ItemVersion?
 		case SeafStatus::Readonly:
-			return LocallyModifiedUnstagedVersion; //TODO
+			return RemovedVersion; //TODO other ItemVersion?
 		case SeafStatus::Locked:
-			return LocallyModifiedVersion; //TODO
+			return LocallyModifiedUnstagedVersion;
 		case SeafStatus::LockedByMe:
-			return LocallyModifiedVersion; //TODO
+			return LocallyModifiedVersion;
 		case SeafStatus::Invalid:
 			return MissingVersion;
 		default:
@@ -63,7 +66,7 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 			break;
 		}
 	} catch(QException &e) {
-		//TODO emit errorMessage(QString::fromUtf8(e.what()));
+		qCritical() << e.what();
 		return UnversionedVersion;
 	}
 }
