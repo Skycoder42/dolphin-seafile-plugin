@@ -1,11 +1,15 @@
 #include "fileviewseafileplugin.h"
 #include <KPluginFactory>
+#include <KFileItem>
 
 K_PLUGIN_FACTORY(FileViewSeafilePluginFactory, registerPlugin<FileViewSeafilePlugin>();)
 
 FileViewSeafilePlugin::FileViewSeafilePlugin(QObject *parent, const QVariantList &args) :
-	KVersionControlPlugin(parent)
-{}
+	KVersionControlPlugin(parent),
+	_seaf(new SeafStatus(this))
+{
+	Q_UNUSED(args)
+}
 
 QString FileViewSeafilePlugin::fileName() const
 {
@@ -14,22 +18,58 @@ QString FileViewSeafilePlugin::fileName() const
 
 bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 {
-	//TODO connect to ccnet and load repositories
-	return true;
+	Q_UNUSED(directory)
+	try {
+		_seaf->connect();
+		return true;
+	} catch(QException &e) {
+		emit errorMessage(QString::fromUtf8(e.what()));
+		return false;
+	}
 }
 
 void FileViewSeafilePlugin::endRetrieval()
 {
-	//TODO disconnect
+	_seaf->disconnect();
 }
 
 KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFileItem &item) const
 {
-	//TODO load sync state for file
-	return NormalVersion;
+	try {
+		auto status = _seaf->syncStatus(item.localPath()); //TODO relative?
+		switch (status) {
+		case SeafStatus::None:
+			return UnversionedVersion;
+		case SeafStatus::Syncing:
+			return UpdateRequiredVersion;
+		case SeafStatus::Error:
+			return ConflictingVersion; //TODO
+		case SeafStatus::Ignored:
+			return IgnoredVersion;
+		case SeafStatus::Synced:
+			return NormalVersion;
+		case SeafStatus::Paused:
+			return NormalVersion; //TODO
+		case SeafStatus::Readonly:
+			return LocallyModifiedUnstagedVersion; //TODO
+		case SeafStatus::Locked:
+			return LocallyModifiedVersion; //TODO
+		case SeafStatus::LockedByMe:
+			return LocallyModifiedVersion; //TODO
+		case SeafStatus::Invalid:
+			return MissingVersion;
+		default:
+			Q_UNREACHABLE();
+			break;
+		}
+	} catch(QException &e) {
+		//TODO emit errorMessage(QString::fromUtf8(e.what()));
+		return UnversionedVersion;
+	}
 }
 
 QList<QAction *> FileViewSeafilePlugin::actions(const KFileItemList &items) const
 {
+	Q_UNUSED(items);
 	return {};
 }

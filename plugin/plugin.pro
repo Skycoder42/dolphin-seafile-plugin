@@ -18,10 +18,12 @@ VERSION = 1.0.0
 DEFINES += QT_DEPRECATED_WARNINGS QT_ASCII_CAST_WARNINGS
 
 HEADERS += \
-		fileviewseafileplugin.h
+		fileviewseafileplugin.h \
+    seafstatus.h
 
 SOURCES += \
-		fileviewseafileplugin.cpp
+		fileviewseafileplugin.cpp \
+    seafstatus.cpp
 
 DISTFILES +=
 
