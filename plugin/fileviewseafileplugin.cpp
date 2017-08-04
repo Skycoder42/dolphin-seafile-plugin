@@ -1,12 +1,11 @@
 #include "fileviewseafileplugin.h"
 
-#include <KPluginFactory>
 #include <KFileItem>
 #include <QMenu>
 
 #include <QDebug>
 
-K_PLUGIN_FACTORY(FileViewSeafilePluginFactory, registerPlugin<FileViewSeafilePlugin>();)
+K_PLUGIN_FACTORY_DEFINITION_WITH_BASEFACTORY(FileViewSeafilePluginFactory, KPluginFactory, registerPlugin<FileViewSeafilePlugin>();)
 
 FileViewSeafilePlugin::FileViewSeafilePlugin(QObject *parent, const QVariantList &args) :
 	KVersionControlPlugin(parent),
@@ -113,5 +112,3 @@ QList<QAction *> FileViewSeafilePlugin::actions(const KFileItemList &items) cons
 	Q_UNUSED(items)
 	return {};
 }
-
-#include "fileviewseafileplugin.moc"

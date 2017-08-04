@@ -2,6 +2,7 @@
 #define FILEVIEWSEAFILEPLUGIN_H
 
 #include <Dolphin/KVersionControlPlugin>
+#include <KPluginFactory>
 
 #include "seafstatus.h"
 
@@ -21,5 +22,7 @@ public:
 private:
 	SeafStatus *_seaf;
 };
+
+K_PLUGIN_FACTORY_DECLARATION_WITH_BASEFACTORY(FileViewSeafilePluginFactory, KPluginFactory)
 
 #endif // FILEVIEWSEAFILEPLUGIN_H
