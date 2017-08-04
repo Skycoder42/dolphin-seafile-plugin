@@ -1,4 +1,5 @@
 TEMPLATE = subdirs
 
 SUBDIRS += plugin \
-    TestLoader
+	TestLoader \
+	seafile-test

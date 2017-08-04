@@ -16,7 +16,7 @@ FileViewSeafilePlugin::FileViewSeafilePlugin(QObject *parent, const QVariantList
 
 QString FileViewSeafilePlugin::fileName() const
 {
-	return QStringLiteral(".seafile-data");//TODO use home or whatever? to include ALL repos
+	return QStringLiteral(".seafile-data");//TODO works, but not for repos outside of the "seafile dir"
 }
 
 bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
@@ -64,7 +64,7 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 			return MissingVersion;
 		default:
 			Q_UNREACHABLE();
-			break;
+			return UnversionedVersion;
 		}
 	} catch(QException &e) {
 		qCritical() << e.what();
