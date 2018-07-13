@@ -161,7 +161,7 @@ QString SeafStatus::repoPath(const QString &path)
 SeafException::SeafException(GError *error) :
 	SeafException(SeafStatus::tr("Seafile Extension: %1").arg(QString::fromUtf8(error->message)).toUtf8())
 {
-	g_free(error);
+	g_error_free(error);
 }
 
 SeafException::SeafException(QString message) :
