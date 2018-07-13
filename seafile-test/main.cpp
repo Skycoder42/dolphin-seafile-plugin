@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	SeafStatus status;
 	auto args = a.arguments();
 	args.removeFirst();
-	foreach(auto arg, args)
+	for(const auto &arg : args)
 		qInfo() << arg << status.syncStatus(arg);
 	return 0;
 }

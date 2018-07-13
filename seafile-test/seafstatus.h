@@ -5,7 +5,7 @@
 #include <QHash>
 #include <QUuid>
 extern "C" {
-#include <ccnet.h>
+#include <searpc-client.h>
 }
 
 class SeafStatus : public QObject
@@ -33,11 +33,10 @@ public:
 	SyncStatus syncStatus(const QString &path);
 
 private:
-	CcnetClientPool *_pool;
-	SearpcClient *_client;
-
+	SearpcClient *_client = nullptr;
 	QHash<QString, QUuid> _repoIds;
 
+	bool createClient();
 	void loadRepos();
 };
 

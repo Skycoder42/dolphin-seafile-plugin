@@ -7,14 +7,14 @@
 #include <QException>
 #include <QTimer>
 extern "C" {
-#include <ccnet.h>
+#include <searpc-client.h>
 }
 
 class SeafException : public QException
 {
 public:
 	SeafException(GError *error);
-	SeafException(QString message);
+	SeafException(const QString &message);
 
 	const char *what() const noexcept override;
 
@@ -48,7 +48,7 @@ public:
 	Q_ENUM(SyncStatus)
 
 	explicit SeafStatus(QObject *parent = nullptr);
-	~SeafStatus();
+	~SeafStatus() override;
 
 	void engage();
 	void disengage();
@@ -68,6 +68,7 @@ private:
 	QTimer *_conTimer;
 
 	QString repoPath(const QString &path);
+	SyncStatus mapStatus(const QByteArray &text);
 };
 
 #endif // SEAFSTATUS_H
