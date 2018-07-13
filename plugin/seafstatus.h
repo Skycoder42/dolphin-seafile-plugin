@@ -6,6 +6,7 @@
 #include <QUuid>
 #include <QException>
 #include <QTimer>
+
 extern "C" {
 #include <searpc-client.h>
 }
@@ -69,6 +70,7 @@ private:
 
 	QString repoPath(const QString &path);
 	SyncStatus mapStatus(const QByteArray &text);
+	QString readSeafileIni();
 };
 
 #endif // SEAFSTATUS_H

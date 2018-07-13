@@ -1,7 +1,9 @@
 #include "seafstatus.h"
 #include <QDebug>
 #include <QDir>
-#include <QStandardPaths>
+#include <QFile>
+#include <QTextStream>
+
 extern "C" {
 #include <searpc-named-pipe-transport.h>
 #include <searpc.h>
@@ -65,12 +67,12 @@ bool SeafStatus::hasRepo(const QString &path)
 SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
 {
 	ensureConnected();
-	//TODO handle repository folder name
 
 	auto repo = repoPath(path);
+	//TODO handle repository folder -> should show a global sync state of repo
 	if(!repo.isNull()) {
 		QDir repoDir(repo);
-		auto id = _repoIds[repo];
+		auto id = _repoIds.value(repo);
 		auto idString = id.toByteArray();
 		idString = idString.mid(1, idString.size() - 2);
 
@@ -94,8 +96,13 @@ SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
 void SeafStatus::ensureConnected()
 {
 	if(!_client) {
-		//TODO get path from settings
-		auto path = QDir{QStandardPaths::writableLocation(QStandardPaths::HomeLocation)}.absoluteFilePath(QStringLiteral("Seafile/.seafile-data/seafile.sock"));
+		// find the socket
+		auto seafDir = readSeafileIni();
+		if(seafDir.isNull())
+			seafDir = QDir::home().filePath(QStringLiteral("Seafile/.seafile-data"));
+		auto path = QDir{seafDir}.absoluteFilePath(QStringLiteral("seafile.sock"));
+
+		// create the client
 		auto pipe_client = searpc_create_named_pipe_client(qUtf8Printable(path));
 		int ret = searpc_named_pipe_client_connect(pipe_client);
 		_client = searpc_client_with_named_pipe_transport(pipe_client, "seafile-rpcserver");
@@ -123,9 +130,9 @@ QString SeafStatus::repoPath(const QString &path)
 {
 	QFileInfo info(path);
 	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
-	for(const auto &repo : _repoIds.keys()) {
-		if(fullPath.startsWith(repo))
-			return repo;
+	for(auto it = _repoIds.constBegin(); it != _repoIds.constEnd(); it++) {
+		if(fullPath.startsWith(it.key()))
+			return it.key();
 	}
 
 	return QString();
@@ -134,17 +141,48 @@ QString SeafStatus::repoPath(const QString &path)
 SeafStatus::SyncStatus SeafStatus::mapStatus(const QByteArray &text)
 {
 	static const QHash<QByteArray, SeafStatus::SyncStatus> PathStatus {
-		{"none", SeafStatus::None},
-		{"syncing", SeafStatus::Syncing},
-		{"error", SeafStatus::Error},
-		{"ignored", SeafStatus::Ignored},
-		{"synced", SeafStatus::Synced},
-		{"paused", SeafStatus::Paused},
-		{"readonly", SeafStatus::Readonly},
-		{"locked", SeafStatus::Locked},
-		{"locked_by_me", SeafStatus::LockedByMe}
+		{"none", None},
+		{"syncing", Syncing},
+		{"error", Error},
+		{"ignored", Ignored},
+		{"synced", Synced},
+		{"paused", Paused},
+		{"readonly", Readonly},
+		{"locked", Locked},
+		{"locked_by_me", LockedByMe}
 	};
-	return PathStatus.value(text);
+	return PathStatus.value(text, Invalid);
+}
+
+QString SeafStatus::readSeafileIni()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+	auto env = qEnvironmentVariable("SEAFILE_DATA_DIR");
+	if(!env.isNull())
+		return env;
+	auto ccnetDir = qEnvironmentVariable("CCNET_CONF_DIR");
+#else
+	auto env = qgetenv("SEAFILE_DATA_DIR");
+	if(!env.isNull())
+		return QString::fromUtf8(env);
+	auto ccnetDir = QString::fromUtf8(qgetenv("CCNET_CONF_DIR"));
+#endif
+	if(ccnetDir.isNull())
+		ccnetDir = QDir::home().filePath(QStringLiteral(".ccnet"));
+
+	QFile seafile_ini(QDir{ccnetDir}.filePath(QStringLiteral("seafile.ini")));
+	if (!seafile_ini.exists())
+		return {};
+
+	if(!seafile_ini.open(QIODevice::ReadOnly | QIODevice::Text))
+		throw SeafException(tr("%1: %2").arg(seafile_ini.fileName(), seafile_ini.errorString()));
+
+	QTextStream input(&seafile_ini);
+	input.setCodec("UTF-8");
+	if (input.atEnd())
+		return {};
+
+	return input.readLine();
 }
 
 
