@@ -16,12 +16,11 @@ FileViewSeafilePlugin::FileViewSeafilePlugin(QObject *parent, const QVariantList
 
 QString FileViewSeafilePlugin::fileName() const
 {
-	return QStringLiteral(".seafile-data");//TODO works, but not for repos outside of the "seafile dir"
+	return QStringLiteral(".seafile-data");
 }
 
 bool FileViewSeafilePlugin::beginRetrieval(const QString &directory)
 {
-	Q_UNUSED(directory)
 	try {
 		_seaf->engage();
 		_seaf->reloadRepos();

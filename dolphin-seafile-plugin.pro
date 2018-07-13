@@ -1,5 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += plugin \
-	TestLoader \
 	seafile-test
+
+OTHER_FILES += \
+	README.md

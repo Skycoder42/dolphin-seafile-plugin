@@ -1,28 +1,27 @@
 TEMPLATE = lib
 
-QT += core gui widgets KIOCore
+QT = core gui widgets KIOCore
 
 CONFIG += plugin warning_clean exceptions link_pkgconfig
 
 # add seafile, ccnet
-PKGCONFIG += libseafile libccnet
+PKGCONFIG += libseafile
 
 #dolphin
 LIBS += -ldolphinvcs
 INCLUDEPATH += /usr/include/Dolphin/
 
-
 TARGET = fileviewseafileplugin
-VERSION = 1.0.0
+VERSION = 1.1.0
 
 DEFINES += QT_DEPRECATED_WARNINGS QT_ASCII_CAST_WARNINGS
 
 HEADERS += \
-		fileviewseafileplugin.h \
+	fileviewseafileplugin.h \
 	seafstatus.h
 
 SOURCES += \
-		fileviewseafileplugin.cpp \
+	fileviewseafileplugin.cpp \
 	seafstatus.cpp
 
 DISTFILES += \

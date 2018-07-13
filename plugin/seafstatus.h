@@ -56,7 +56,8 @@ public:
 
 	void reloadRepos();
 
-	bool hasRepo(const QString &path);
+	bool hasRepo(const QString &path) const;
+	QStringList allRepost() const;
 	SyncStatus syncStatus(const QString &path);
 
 private slots:
@@ -68,10 +69,10 @@ private:
 	QHash<QString, QUuid> _repoIds;
 	QTimer *_conTimer;
 
-	QString repoPath(const QString &path);
-	SyncStatus mapFileStatus(const QByteArray &text);
-	SyncStatus mapRepoStatus(const QByteArray &text);
-	QString readSeafileIni();
+	QString repoPath(const QString &path) const;
+	SyncStatus mapFileStatus(const QByteArray &text) const;
+	SyncStatus mapRepoStatus(const QByteArray &text) const;
+	QString readSeafileIni() const;
 };
 
 #endif // SEAFSTATUS_H

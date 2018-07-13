@@ -13,17 +13,14 @@ More features, such as sharing, etc. are planned.
 ### Limitations/Workaround
 Due to the way those dolphin plugins work, only repositories that are inside your seafile main directory will work. Additionally, you will have to open this folder once, before the plugin recognizes them.
 
-The reason is, that the plugin reacts on the presence of the `.seafile-data` folder. If you have custom locations outside of the folder, or don't want to always go there first, simply create an empty file called `.seafile-data` in whichever directory you need the plugin to work.  
+The reason is, that the plugin reacts on the presence of the `.seafile-data` folder. If you have custom locations outside of the folder, or don't want to always go there first, simply create an empty file called `.seafile-data` in whichever directory you need the plugin to work.
 One useful location would be your home directory, as thats the default directory dolphin opens.
 
-I'll try to work around that issue in future versions.
-
 ## Dependencies
-You'll need Dolphin (and thus Qt and KDE frameworks) and Seafile. The plugin only needs the seafile daemon, so make shure you have that one with whatever seafile package you use. Also, ccnet is required, but as it's a depedency of seafile, should always be present.
+You'll need Dolphin (and thus Qt and KDE frameworks) and Seafile. The plugin only needs the seafile daemon, so make shure you have that one with whatever seafile package you use.
 
 ## Installation
-For now, only an AUR package is provided: [`dolphin-seafile-plugin`](https://aur.archlinux.org/packages/dolphin-seafile-plugin)  
-Debian packages and others I will provide as soon as possible.
+For now, only an AUR package is provided: [`dolphin-seafile-plugin`](https://aur.archlinux.org/packages/dolphin-seafile-plugin)
 
 Until then, you can simply build it yourself. Install all the stated dependencies and build via:
 ```

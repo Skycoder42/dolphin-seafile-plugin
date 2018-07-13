@@ -59,9 +59,14 @@ void SeafStatus::reloadRepos()
 	g_list_free(res);
 }
 
-bool SeafStatus::hasRepo(const QString &path)
+bool SeafStatus::hasRepo(const QString &path) const
 {
 	return _repoIds.contains(repoPath(path));
+}
+
+QStringList SeafStatus::allRepost() const
+{
+	return _repoIds.keys();
 }
 
 SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
@@ -147,7 +152,7 @@ void SeafStatus::freeConnection()
 	}
 }
 
-QString SeafStatus::repoPath(const QString &path)
+QString SeafStatus::repoPath(const QString &path) const
 {
 	QFileInfo info(path);
 	auto fullPath = QDir::cleanPath(info.absoluteFilePath());
@@ -161,7 +166,7 @@ QString SeafStatus::repoPath(const QString &path)
 	return QString();
 }
 
-SeafStatus::SyncStatus SeafStatus::mapFileStatus(const QByteArray &text)
+SeafStatus::SyncStatus SeafStatus::mapFileStatus(const QByteArray &text) const
 {
 	static const QHash<QByteArray, SeafStatus::SyncStatus> PathStatus {
 		{"none", None},
@@ -177,7 +182,7 @@ SeafStatus::SyncStatus SeafStatus::mapFileStatus(const QByteArray &text)
 	return PathStatus.value(text, Invalid);
 }
 
-SeafStatus::SyncStatus SeafStatus::mapRepoStatus(const QByteArray &text)
+SeafStatus::SyncStatus SeafStatus::mapRepoStatus(const QByteArray &text) const
 {
 	static const QHash<QByteArray, SeafStatus::SyncStatus> PathStatus {
 		{"synchronized", Synced},
@@ -195,7 +200,7 @@ SeafStatus::SyncStatus SeafStatus::mapRepoStatus(const QByteArray &text)
 	return PathStatus.value(text, None);
 }
 
-QString SeafStatus::readSeafileIni()
+QString SeafStatus::readSeafileIni() const
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
 	auto env = qEnvironmentVariable("SEAFILE_DATA_DIR");
