@@ -69,24 +69,45 @@ SeafStatus::SyncStatus SeafStatus::syncStatus(const QString &path)
 	ensureConnected();
 
 	auto repo = repoPath(path);
-	//TODO handle repository folder -> should show a global sync state of repo
 	if(!repo.isNull()) {
-		QDir repoDir(repo);
+		QDir repoDir{repo};
 		auto id = _repoIds.value(repo);
 		auto idString = id.toByteArray();
 		idString = idString.mid(1, idString.size() - 2);
 
-		GError *error = nullptr;
-		auto res = searpc_client_call__string(_client, "seafile_get_path_sync_status", &error, 3,
-											  "string", idString.constData(),
-											  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
-											  "int", QFileInfo(path).isDir());
-		if(error)
-			throw SeafException(error);
-		else {
-			auto status = mapStatus(res);
-			free(res);
-			return status;
+		if(repo == path) {
+			GError *error = nullptr;
+			auto taskObj = searpc_client_call__object (_client, "seafile_get_repo_sync_task", SEAFILE_TYPE_SYNC_TASK,
+													   &error, 1,
+													   "string", idString.constData());
+			auto task = SEAFILE_SYNC_TASK(taskObj);
+			if(error)
+				throw SeafException(error);
+			else {
+				if(QByteArray{seafile_sync_task_get_error(task)} != "Success") {
+					auto msg = QString::fromUtf8(seafile_sync_task_get_err_detail(task));
+					g_object_unref(taskObj);
+					throw SeafException{std::move(msg)};
+				} else {
+					auto status = mapRepoStatus(seafile_sync_task_get_state(task));
+					g_object_unref(taskObj);
+					return status;
+				}
+			}
+		} else {
+			GError *error = nullptr;
+			auto res = searpc_client_call__string(_client, "seafile_get_path_sync_status",
+												  &error, 3,
+												  "string", idString.constData(),
+												  "string", repoDir.relativeFilePath(path).toUtf8().constData(),
+												  "int", QFileInfo(path).isDir());
+			if(error)
+				throw SeafException(error);
+			else {
+				auto status = mapFileStatus(res);
+				free(res);
+				return status;
+			}
 		}
 	}
 
@@ -133,12 +154,14 @@ QString SeafStatus::repoPath(const QString &path)
 	for(auto it = _repoIds.constBegin(); it != _repoIds.constEnd(); it++) {
 		if(fullPath.startsWith(it.key()))
 			return it.key();
+		else if(QFileInfo{it.key()}.dir() == QDir{path})
+			return it.key();
 	}
 
 	return QString();
 }
 
-SeafStatus::SyncStatus SeafStatus::mapStatus(const QByteArray &text)
+SeafStatus::SyncStatus SeafStatus::mapFileStatus(const QByteArray &text)
 {
 	static const QHash<QByteArray, SeafStatus::SyncStatus> PathStatus {
 		{"none", None},
@@ -152,6 +175,24 @@ SeafStatus::SyncStatus SeafStatus::mapStatus(const QByteArray &text)
 		{"locked_by_me", LockedByMe}
 	};
 	return PathStatus.value(text, Invalid);
+}
+
+SeafStatus::SyncStatus SeafStatus::mapRepoStatus(const QByteArray &text)
+{
+	static const QHash<QByteArray, SeafStatus::SyncStatus> PathStatus {
+		{"synchronized", Synced},
+		{"committing", Syncing},
+		{"initializing", Syncing},
+		{"downloading", Syncing},
+		{"uploading", Syncing},
+		{"merging", Syncing},
+		{"waiting for sync", Paused},
+		{"relay not connected", Paused},
+		{"relay authenticating", Syncing},
+		{"auto sync is turned off", Paused},
+		{"cancel pendin", Paused}
+	};
+	return PathStatus.value(text, None);
 }
 
 QString SeafStatus::readSeafileIni()

@@ -69,7 +69,8 @@ private:
 	QTimer *_conTimer;
 
 	QString repoPath(const QString &path);
-	SyncStatus mapStatus(const QByteArray &text);
+	SyncStatus mapFileStatus(const QByteArray &text);
+	SyncStatus mapRepoStatus(const QByteArray &text);
 	QString readSeafileIni();
 };
 
