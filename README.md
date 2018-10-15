@@ -17,7 +17,7 @@ The reason is, that the plugin reacts on the presence of the `.seafile-data` fol
 One useful location would be your home directory, as thats the default directory dolphin opens.
 
 ## Dependencies
-You'll need Dolphin (and thus Qt and KDE frameworks) and Seafile. The plugin only needs the seafile daemon, so make shure you have that one with whatever seafile package you use.
+You'll need Dolphin (and thus Qt and KDE frameworks) and Seafile. The plugin only needs the seafile daemon, so make sure you have that one with whatever seafile package you use.
 
 ## Installation
 For now, only an AUR package is provided: [`dolphin-seafile-plugin`](https://aur.archlinux.org/packages/dolphin-seafile-plugin)
