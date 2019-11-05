@@ -57,7 +57,7 @@ public:
 	void reloadRepos();
 
 	bool hasRepo(const QString &path) const;
-	QStringList allRepost() const;
+	QStringList allRepos() const;
 	SyncStatus syncStatus(const QString &path);
 
 private slots:
@@ -65,7 +65,7 @@ private slots:
 	void freeConnection();
 
 private:
-	SearpcClient *_client;
+	SearpcClient *_client = nullptr;
 	QHash<QString, QUuid> _repoIds;
 	QTimer *_conTimer;
 
