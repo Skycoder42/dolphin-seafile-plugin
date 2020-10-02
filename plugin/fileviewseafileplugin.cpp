@@ -74,8 +74,13 @@ KVersionControlPlugin::ItemVersion FileViewSeafilePlugin::itemVersion(const KFil
 		return UnversionedVersion;
 	}
 }
+QList<QAction *> FileViewSeafilePlugin::versionControlActions(const KFileItemList &items) const
+{
+	Q_UNUSED(items)
+	return {};
+}
 
-QList<QAction *> FileViewSeafilePlugin::actions(const KFileItemList &items) const
+QList<QAction *> FileViewSeafilePlugin::outOfVersionControlActions(const KFileItemList &items) const
 {
 //	//test if this it's actually seafile
 //	try {
